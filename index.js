@@ -13,6 +13,9 @@ app.get("/temperatura", (req, res) => {
 app.get("/otro", (req, res) => {
   res.json({ valor: "HOLA ", timestamp: new Date().toISOString() });
 });
+app.get("/velocidad", (req, res) => {
+  res.json({ nombre: "Estrella ", apellido: "Briones Moncada" });
+});
 app.listen(PORT, () => {
   console.log(`Servidor corregido en puerto ${PORT}`);
 });
