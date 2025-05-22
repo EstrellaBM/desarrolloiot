@@ -16,6 +16,9 @@ app.get("/otro", (req, res) => {
 app.get("/velocidad", (req, res) => {
   res.json({ nombre: "Estrella ", apellido: "Briones Moncada" });
 });
+app.get("/distancia", (req, res) => {
+  res.json({ valor: "200m", timestamp: new Date().toISOString() });
+});
 app.listen(PORT, () => {
   console.log(`Servidor corregido en puerto ${PORT}`);
 });
