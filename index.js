@@ -7,9 +7,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post("/create-new-table", async (req, res) => {
+app.post("/create-data-table", async (req, res) => {
   try {
-    const tableName = "new";
+    const tableName = "data";
 
     const checkTable = await pool.query("SELECT to_regclass($1) AS exists", [
       tableName,
@@ -17,7 +17,7 @@ app.post("/create-new-table", async (req, res) => {
 
     if (!checkTable.rows[0].exists) {
       await pool.query(`
-        CREATE TABLE new (
+        CREATE TABLE data (
           id SERIAL PRIMARY KEY,
           nombre TEXT NOT NULL,
           matricula TEXT NOT NULL,
@@ -25,9 +25,7 @@ app.post("/create-new-table", async (req, res) => {
         );
       `);
 
-      return res
-        .status(201)
-        .json({ message: "✅ Tabla 'new' creada exitosamente" });
+      return res.status(201).json({ message: "✅ Tabla creada exitosamente" });
     } else {
       return res.status(200).json({ message: "ℹ️ La tabla ya existe" });
     }
@@ -37,7 +35,7 @@ app.post("/create-new-table", async (req, res) => {
   }
 });
 
-app.post("/savestudent", async (req, res) => {
+app.post("/savedata", async (req, res) => {
   const { nombre, matricula } = req.body;
 
   if (!nombre || !matricula) {
@@ -48,12 +46,12 @@ app.post("/savestudent", async (req, res) => {
 
   try {
     const result = await pool.query(
-      "INSERT INTO students (nombre, matricula) VALUES ($1, $2) RETURNING *;",
+      "INSERT INTO data (nombre, matricula) VALUES ($1, $2) RETURNING *;",
       [nombre, matricula]
     );
 
     return res.status(201).json({
-      message: "✅ Datos del estudiante guardados exitosamente",
+      message: "✅ Datos guardados exitosamente",
       data: result.rows[0],
     });
   } catch (err) {
@@ -62,24 +60,24 @@ app.post("/savestudent", async (req, res) => {
   }
 });
 
-app.post("/delete-students-table", async (req, res) => {
-  try {
-    const tableName = "new";
+app.get("/temperatura", (req, res) => {
+  res.json({ valor: "10 °C", timestamp: new Date().toISOString() });
+});
 
-    const checkTable = await pool.query("SELECT to_regclass($1) AS exists", [
-      tableName,
-    ]);
+app.post("/delete-table", async (req, res) => {
+  try {
+    // Verifica si existe la tabla 'data'
+    const checkTable = await pool.query("SELECT to_regclass('data') AS exists");
 
     if (checkTable.rows[0].exists) {
-      await pool.query(`DROP TABLE ${tableName};`);
-      return res
-        .status(200)
-        .json({ message: "✅ Tabla 'new' borrada exitosamente" });
+      // Elimina la tabla directamente (sin interpolación)
+      await pool.query("DROP TABLE data;");
+      return res.status(200).json({ message: "✅ Tabla borrada exitosamente" });
     } else {
       return res.status(404).json({ message: "ℹ️ La tabla no existe" });
     }
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("❌ Error:", error.message);
     res.status(500).json({ error: "Error al procesar la solicitud" });
   }
 });
