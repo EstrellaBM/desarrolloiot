@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post("/create-data-table", async (req, res) => {
+app.post("/create-table", async (req, res) => {
   try {
     const tableName = "data";
 
@@ -17,17 +17,18 @@ app.post("/create-data-table", async (req, res) => {
 
     if (!checkTable.rows[0].exists) {
       await pool.query(`
-        CREATE TABLE data (
+        CREATE TABLE ${tableName} (
           id SERIAL PRIMARY KEY,
-          nombre TEXT NOT NULL,
-          matricula TEXT NOT NULL,
+          nombre VARCHAR(100) NOT NULL,
+          matricula VARCHAR(50) NOT NULL,
+          value TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `);
 
       return res.status(201).json({ message: "✅ Tabla creada exitosamente" });
     } else {
-      return res.status(200).json({ message: "ℹ️ La tabla ya existe" });
+      return res.status(200).json({ message: "ℹ La tabla ya existe" });
     }
   } catch (error) {
     console.error("❌ Error:", error.message);
@@ -36,18 +37,17 @@ app.post("/create-data-table", async (req, res) => {
 });
 
 app.post("/savedata", async (req, res) => {
-  const { nombre, matricula } = req.body;
+  const { value, nombre, matricula } = req.body;
+  console.log(value, nombre, matricula);
 
-  if (!nombre || !matricula) {
-    return res
-      .status(400)
-      .json({ error: "Los campos 'nombre' y 'matricula' son requeridos" });
+  if (!value || !nombre || !matricula) {
+    return res.status(400).json({ error: "El campo 'value' es requerido" });
   }
 
   try {
     const result = await pool.query(
-      "INSERT INTO data (nombre, matricula) VALUES ($1, $2) RETURNING *;",
-      [nombre, matricula]
+      `INSERT INTO data (value, nombre, matricula) VALUES ($1, $2, $3) RETURNING *;`,
+      [value, nombre, matricula]
     );
 
     return res.status(201).json({
@@ -60,26 +60,46 @@ app.post("/savedata", async (req, res) => {
   }
 });
 
-app.get("/temperatura", (req, res) => {
-  res.json({ valor: "10 °C", timestamp: new Date().toISOString() });
+app.get("/getdata", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM data ORDER BY id");
+
+    return res.status(200).json({
+      message: "✅ Datos obtenidos exitosamente",
+      data: result.rows,
+      total: result.rows.length,
+    });
+  } catch (error) {
+    console.error("❌ Error:", error.message);
+    res.status(500).json({ error: "Error al obtener datos" });
+  }
 });
 
-app.post("/delete-table", async (req, res) => {
+app.post("/delete-data-table", async (req, res) => {
   try {
-    // Verifica si existe la tabla 'data'
-    const checkTable = await pool.query("SELECT to_regclass('data') AS exists");
+    const tableName = "data";
+
+    const checkTable = await pool.query("SELECT to_regclass($1) AS exists", [
+      tableName,
+    ]);
 
     if (checkTable.rows[0].exists) {
-      // Elimina la tabla directamente (sin interpolación)
-      await pool.query("DROP TABLE data;");
-      return res.status(200).json({ message: "✅ Tabla borrada exitosamente" });
+      await pool.query(`DROP TABLE ${tableName}`);
+
+      return res
+        .status(200)
+        .json({ message: "✅ Tabla eliminada exitosamente" });
     } else {
-      return res.status(404).json({ message: "ℹ️ La tabla no existe" });
+      return res.status(404).json({ message: "ℹ La tabla no existe" });
     }
   } catch (error) {
     console.error("❌ Error:", error.message);
     res.status(500).json({ error: "Error al procesar la solicitud" });
   }
+});
+
+app.get("/temperatura", (req, res) => {
+  res.json({ valor: "10 °C", timestamp: new Date().toISOString() });
 });
 
 const PORT = process.env.PORT || 3002;
