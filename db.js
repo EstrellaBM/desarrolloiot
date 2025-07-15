@@ -3,7 +3,8 @@ const { Pool } = pg;
 
 const pool = new Pool({
   connectionString:
-    "postgresql://root:Og1lOFCvVNLXDILLOVSthS8bCMtAvEy3@dpg-d0vknm3uibrs73eb3250-a.oregon-postgres.render.com/desarrolloiot",
+    "postgresql://desarrolloiot_qw28_user:1YGHLZXAfCdZkDuEJzrfoK4fh0Ir5n4G@dpg-d1qphe3uibrs73eoj47g-a.oregon-postgres.render.com/desarrolloiot_qw28",
+
   ssl: {
     rejectUnauthorized: false,
   },
