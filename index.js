@@ -119,6 +119,34 @@ const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor escuchando en el puerto ${PORT}`);
 });
+/*app.post("/create-table", async (req, res) => {
+  try {
+    const tableName = "data";
+
+    const checkTable = await pool.query("SELECT to_regclass($1) AS exists", [
+      tableName,
+    ]);
+
+    if (!checkTable.rows[0].exists) {
+      await pool.query(`
+        CREATE TABLE ${tableName} (
+          id SERIAL PRIMARY KEY,
+          nombre VARCHAR(100) NOT NULL,
+          matricula VARCHAR(50) NOT NULL,
+          value TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      return res.status(201).json({ message: "✅ Tabla creada exitosamente" });
+    } else {
+      return res.status(200).json({ message: "ℹ La tabla ya existe" });
+    }
+  } catch (error) {
+    console.error("❌ Error:", error.message);
+    res.status(500).json({ error: "Error al procesar la solicitud" });
+  }
+}); */
 
 app.post("/savedata", async (req, res) => {
   // La ruta debe coincidir con Postman: "/savedata"
@@ -126,11 +154,9 @@ app.post("/savedata", async (req, res) => {
 
   // Validación para todos los campos requeridos
   if (!value || !nombre || !matricula) {
-    return res
-      .status(400)
-      .json({
-        error: "Todos los campos (value, nombre, matricula) son requeridos",
-      });
+    return res.status(400).json({
+      error: "Todos los campos (value, nombre, matricula) son requeridos",
+    });
   }
 
   const tableName = "data"; // Nombre de la tabla
