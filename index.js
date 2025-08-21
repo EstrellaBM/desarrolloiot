@@ -1,4 +1,4 @@
-import pool from "./db"; // Asegúrate de tener tu archivo de conexión a la base de datos
+import pool from "./db.js"; // Asegúrate de tener tu archivo de conexión a la base de datos
 import express from "express";
 import cors from "cors";
 import jwt from "jsonwebtoken";
