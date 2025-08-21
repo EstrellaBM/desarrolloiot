@@ -1,4 +1,4 @@
-import pool from "./db.js"; // Asegúrate de tener tu archivo de conexión a la base de datos
+import pool from "./db.js";
 import express from "express";
 import cors from "cors";
 import jwt from "jsonwebtoken";
@@ -196,7 +196,7 @@ app.post("/turn-off-device", authenticateToken, async (req, res) => {
 });
 
 // Obtener logs del dispositivo (Ruta protegida)
-app.get("/device-logs", authenticateToken, async (req, res) => {
+app.get("/device", authenticateToken, async (req, res) => {
   const { id } = req.user;
   try {
     const result = await pool.query(
