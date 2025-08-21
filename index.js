@@ -135,23 +135,14 @@ app.post("/login-device", async (req, res) => {
 });
 
 // Obtener estado del dispositivo (Ruta protegida)
-app.get("/device-status", authenticateToken, async (req, res) => {
-  const { id } = req.user;
+app.get("/status", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT status, last_value FROM devices WHERE id = $1",
-      [id]
-    );
-    if (result.rows.length > 0) {
-      return res.json({
-        status: result.rows[0].status,
-        lastValue: result.rows[0].last_value,
-      });
-    }
-    return res.status(404).json({ message: "Dispositivo no encontrado." });
+    const result = await pool.query("SELECT 1 FROM relay_status WHERE id = 1");
+    const isOn = result.rowCount > 0;
+    return res.json({ status: { isOn } });
   } catch (err) {
-    console.error("Error al obtener estado:", err.message);
-    return res.status(500).json({ message: "Error al obtener el estado." });
+    console.error("Error /status:", err.message);
+    return res.status(500).json({ error: "No se pudo leer estado" });
   }
 });
 
