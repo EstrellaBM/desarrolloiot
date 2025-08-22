@@ -101,11 +101,9 @@ app.post("/register-device", async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error al registrar dispositivo:", error.message);
-    return res
-      .status(500)
-      .json({
-        error: "Error interno del servidor al registrar el dispositivo.",
-      });
+    return res.status(500).json({
+      error: "Error interno del servidor al registrar el dispositivo.",
+    });
   }
 });
 
@@ -165,6 +163,16 @@ app.get("/status", async (req, res) => {
   } catch (err) {
     console.error("Error /status:", err.message);
     return res.status(500).json({ error: "No se pudo leer estado" });
+  }
+});
+
+app.get("/get-devices", async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT * FROM devices`);
+    return res.json(result.rows);
+  } catch (err) {
+    console.error("❌ Error al obtener dispositivos:", err.message);
+    return res.status(500).json({ error: "Imposible regresar los datos" });
   }
 });
 
