@@ -59,7 +59,6 @@ app.post("/create-device-tables", async (req, res) => {
 app.post("/register-device", async (req, res) => {
   const { device_name, enroll_id, status } = req.body;
 
-  // Validación de los datos recibidos
   if (!device_name || !enroll_id || !status) {
     return res.status(400).json({
       error:
@@ -68,28 +67,45 @@ app.post("/register-device", async (req, res) => {
   }
 
   try {
-    // Inserta los datos en la tabla 'devices' (asumiendo que ese es el nombre de tu tabla)
-    // Se usa ON CONFLICT (device_name) para actualizar el registro si ya existe
-    const result = await pool.query(
+    // 1. Intenta actualizar un registro existente
+    const updateResult = await pool.query(
       `
-      INSERT INTO devices (device_name, enroll_id, status)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (device_name) DO UPDATE
-      SET enroll_id = EXCLUDED.enroll_id, status = EXCLUDED.status, last_value = $4, updated_at = CURRENT_TIMESTAMP
+      UPDATE devices
+      SET enroll_id = $2, status = $3, last_value = $3, updated_at = CURRENT_TIMESTAMP
+      WHERE device_name = $1
       RETURNING *;
       `,
-      [device_name, enroll_id, status, status]
+      [device_name, enroll_id, status]
     );
 
-    return res.status(201).json({
-      message: "✅ Dispositivo registrado/actualizado exitosamente",
-      device: result.rows[0],
+    // 2. Si no se actualizó ningún registro, significa que no existe. Entonces, inserta uno nuevo.
+    if (updateResult.rowCount === 0) {
+      const insertResult = await pool.query(
+        `
+        INSERT INTO devices (device_name, enroll_id, status, last_value)
+        VALUES ($1, $2, $3, $3)
+        RETURNING *;
+        `,
+        [device_name, enroll_id, status]
+      );
+      return res.status(201).json({
+        message: "✅ Dispositivo insertado exitosamente",
+        device: insertResult.rows[0],
+      });
+    }
+
+    // Si se actualizó, devuelve la respuesta de la actualización
+    return res.status(200).json({
+      message: "✅ Dispositivo actualizado exitosamente",
+      device: updateResult.rows[0],
     });
   } catch (error) {
     console.error("❌ Error al registrar dispositivo:", error.message);
-    return res.status(500).json({
-      error: "Error interno del servidor al registrar el dispositivo.",
-    });
+    return res
+      .status(500)
+      .json({
+        error: "Error interno del servidor al registrar el dispositivo.",
+      });
   }
 });
 
