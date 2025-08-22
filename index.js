@@ -67,23 +67,23 @@ app.post("/register-device", async (req, res) => {
   }
 
   try {
-    // 1. Intenta actualizar un registro existente
+    // 1. Intenta actualizar un registro existente, usando "enroll_id" como clave única
     const updateResult = await pool.query(
       `
       UPDATE devices
-      SET enroll_id = $2, status = $3, last_value = $3, updated_at = CURRENT_TIMESTAMP
-      WHERE device_name = $1
+      SET device_name = $2, status = $3, created_at = CURRENT_TIMESTAMP
+      WHERE enroll_id = $1
       RETURNING *;
       `,
-      [device_name, enroll_id, status]
+      [enroll_id, device_name, status]
     );
 
     // 2. Si no se actualizó ningún registro, significa que no existe. Entonces, inserta uno nuevo.
     if (updateResult.rowCount === 0) {
       const insertResult = await pool.query(
         `
-        INSERT INTO devices (device_name, enroll_id, status, last_value)
-        VALUES ($1, $2, $3, $3)
+        INSERT INTO devices (device_name, enroll_id, status)
+        VALUES ($1, $2, $3)
         RETURNING *;
         `,
         [device_name, enroll_id, status]
